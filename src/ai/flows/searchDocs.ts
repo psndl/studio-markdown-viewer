@@ -1,14 +1,37 @@
-import {defineFlow} from 'genkit';
-import {ai} from '../genkit';
+'use server';
+/**
+ * @fileOverview A document search AI agent.
+ *
+ * - searchDocs - A function that handles the document search process.
+ * - SearchDocsInput - The input type for the searchDocs function.
+ * - SearchDocsOutput - The return type for the searchDocs function.
+ */
+
+import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-export const searchDocs = defineFlow(
+const SearchDocsInputSchema = z.object({
+  query: z.string(),
+});
+export type SearchDocsInput = z.infer<typeof SearchDocsInputSchema>;
+
+const SearchDocsOutputSchema = z.object({
+  match: z.string(),
+});
+export type SearchDocsOutput = z.infer<typeof SearchDocsOutputSchema>;
+
+
+export async function searchDocs(input: SearchDocsInput): Promise<SearchDocsOutput> {
+  return searchDocsFlow(input);
+}
+
+const searchDocsFlow = ai.defineFlow(
   {
-    name: 'searchDocs',
-    inputSchema: z.object({query: z.string()}),
-    outputSchema: z.object({match: z.string()}),
+    name: 'searchDocsFlow',
+    inputSchema: SearchDocsInputSchema,
+    outputSchema: SearchDocsOutputSchema,
   },
   async ({query}) => {
     const docsDir = path.join(process.cwd(), 'docs');
@@ -38,7 +61,7 @@ export const searchDocs = defineFlow(
       },
     });
 
-    const match = llmResponse.text().trim();
+    const match = (llmResponse.text ?? '').trim();
     
     if (files.includes(match)) {
         return { match };

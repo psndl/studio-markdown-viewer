@@ -1,6 +1,5 @@
 'use server';
 
-import {run} from '@genkit-ai/next/server';
 import {searchDocs} from '@/ai/flows/searchDocs';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
@@ -28,7 +27,7 @@ export async function search(prevState: SearchState, formData: FormData): Promis
   const query = validatedFields.data.query;
 
   try {
-    const {match} = await run(searchDocs, {query});
+    const {match} = await searchDocs({query});
 
     if (match) {
       redirect(`/?file=${match}`);
